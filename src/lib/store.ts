@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import emojis from '../emojis';
+
 type Card = {
 	id: number;
 	value: string;
@@ -12,6 +14,7 @@ type MemoryGameState = {
 	matchedCards: Card[];
 	isGameOver: boolean;
 	highlightedCardId: number | null;
+	tries: number;
 };
 
 type MemoryGameActions = {
@@ -19,41 +22,32 @@ type MemoryGameActions = {
 	handleCardClick: (id: number) => void;
 };
 
-const EMOJIS = [
-	"😊",
-	"🐶",
-	"🍕",
-	"🚗",
-	"🌟",
-	"🎈",
-	"🏀",
-	"🌈",
-	"🐱",
-	"🍦",
-	"🎵",
-	"🚀",
-	"🌻",
-	"🎉",
-	"🍩",
-	"🐻",
-	"🌍",
-	"🎂",
-];
-
-const shuffledEmojis = [...EMOJIS, ...EMOJIS].sort(() => Math.random() - 0.5);
-
-export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((set, _get, store) => ({
-	cards: shuffledEmojis.map((emoji, index) => ({
+function getShuffledEmojis() {
+	// Take a random sample of 18 unique emojis, then duplicate and shuffle
+	const unique = [...emojis].sort(() => Math.random() - 0.5).slice(0, 18);
+	const shuffled = [...unique, ...unique].sort(() => Math.random() - 0.5);
+	return shuffled.map((emoji, index) => ({
 		id: index,
 		value: emoji,
 		isOpen: false,
 		isMatched: false,
-	})),
+	}));
+}
+
+export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((set) => ({
+	cards: getShuffledEmojis(),
 	reset: () => {
-		set(store.getInitialState())
+		set({
+			cards: getShuffledEmojis(),
+			openedCards: [],
+			matchedCards: [],
+			isGameOver: false,
+			highlightedCardId: null,
+		});
 	},
-	openedCards: [], // Do I need this?
+	openedCards: [],
 	matchedCards: [],
+	tries: 0,
 	isGameOver: false,
 	highlightedCardId: null,
 	handleCardClick: (id: number) => {
@@ -83,6 +77,7 @@ export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((s
 						matchedCards: [...state.matchedCards, card1, card2],
 						isGameOver: matchedCards.every((card) => card.isMatched),
 						highlightedCardId: null,
+						tries: state.tries,
 					};
 				} else {
 					setTimeout(() => {
@@ -96,6 +91,7 @@ export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((s
 								cards: closedCards,
 								openedCards: [],
 								highlightedCardId: null,
+								tries: current.tries + 1,
 							};
 						});
 					}, 1000);
@@ -103,6 +99,7 @@ export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((s
 						cards: updatedCards,
 						openedCards: updatedOpenedCards,
 						highlightedCardId: card2.id,
+						tries: state.tries + 1,
 					};
 				}
 			}
@@ -110,6 +107,7 @@ export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((s
 				cards: updatedCards,
 				openedCards: updatedOpenedCards,
 				highlightedCardId: null,
+				tries: state.tries + 1,
 			};
 		});
 	},

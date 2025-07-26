@@ -1,4 +1,5 @@
 import "./App.css";
+import { Button } from "./components/ui/button";
 import { Card, CardTitle } from "./components/ui/card";
 import { useMemoryGameStore } from "./lib/store";
 
@@ -79,16 +80,20 @@ function App() {
   );
   const handleCardClick = useMemoryGameStore((state) => state.handleCardClick);
   const resetGame = useMemoryGameStore((state) => state.reset);
+  const tries = useMemoryGameStore((state) => state.tries);
 
   return (
     <div className="flex items-center justify-center bg-gray-100 flex-col">
-      <div className="flex align-center justify-end w-full max-w-3xl p-4">
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+      <div className="flex align-center justify-between w-full max-w-3xl p-4">
+        <div className="text-lg font-semibold">
+          Tries: <span className="text-blue-600">{tries}</span>
+        </div>
+        <Button
+          className="px-4 py-2 cursor-pointer bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
           onClick={resetGame}
         >
           Reset Game
-        </button>
+        </Button>
       </div>
       <div className="grid grid-cols-6 gap-2 w-[800px] p-1">
         {cards.map(({ id, value, isOpen, isMatched }) => {
