@@ -1,13 +1,28 @@
 import "./App.css";
 import { Card, CardTitle } from "./components/ui/card";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 function MemoryCard() {
   const [isOpen, setIsOpen] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleClick = () => {
-    setIsOpen(!isOpen);
+    if (!isOpen) {
+      setIsOpen(true);
+      timerRef.current = setTimeout(() => {
+        setIsOpen(false);
+      }, 3000);
+    }
   };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div
       className="flip-card aspect-square w-full h-full cursor-pointer"
@@ -15,17 +30,27 @@ function MemoryCard() {
       style={{ perspective: "1000px" }}
     >
       <div
-        className="flip-card-inner w-full h-full transition-transform duration-500"
-        style={{ transform: isOpen ? "rotateY(180deg)" : "rotateY(0deg)" }}
+        className="flip-card-inner w-full h-full"
+        style={{
+          transform: isOpen ? "rotateY(180deg)" : "rotateY(0deg)",
+          transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1)",
+          transformStyle: "preserve-3d",
+        }}
       >
-        <div className="flip-card-front absolute w-full h-full">
+        <div
+          className="flip-card-front absolute w-full h-full"
+          style={{ backfaceVisibility: "hidden" }}
+        >
           <Card className="aspect-square flex items-center justify-center bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-200 border border-gray-200 w-full h-full">
             <CardTitle className="text-3xl font-bold text-gray-700 select-none">
               {/* Front face content, can be empty or a placeholder */}
             </CardTitle>
           </Card>
         </div>
-        <div className="flip-card-back absolute w-full h-full">
+        <div
+          className="flip-card-back absolute w-full h-full"
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        >
           <Card className="aspect-square flex items-center justify-center bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-200 border border-gray-200 w-full h-full">
             <CardTitle className="text-3xl font-bold text-gray-700 select-none">
               😊
