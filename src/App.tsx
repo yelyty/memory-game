@@ -78,8 +78,18 @@ function App() {
     (state) => state.highlightedCardId
   );
   const handleCardClick = useMemoryGameStore((state) => state.handleCardClick);
+  const resetGame = useMemoryGameStore((state) => state.reset);
+
   return (
-    <div className="flex items-center justify-center bg-gray-100">
+    <div className="flex items-center justify-center bg-gray-100 flex-col">
+      <div className="flex align-center justify-end w-full max-w-3xl p-4">
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          onClick={resetGame}
+        >
+          Reset Game
+        </button>
+      </div>
       <div className="grid grid-cols-6 gap-2 w-[800px] p-1">
         {cards.map(({ id, value, isOpen, isMatched }) => {
           // Green border for any open card that is not matched and not highlighted (red)

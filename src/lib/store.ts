@@ -12,6 +12,10 @@ type MemoryGameState = {
 	matchedCards: Card[];
 	isGameOver: boolean;
 	highlightedCardId: number | null;
+};
+
+type MemoryGameActions = {
+	reset: () => void;
 	handleCardClick: (id: number) => void;
 };
 
@@ -38,13 +42,16 @@ const EMOJIS = [
 
 const shuffledEmojis = [...EMOJIS, ...EMOJIS].sort(() => Math.random() - 0.5);
 
-export const useMemoryGameStore = create<MemoryGameState>((set) => ({
+export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((set, _get, store) => ({
 	cards: shuffledEmojis.map((emoji, index) => ({
 		id: index,
 		value: emoji,
 		isOpen: false,
 		isMatched: false,
 	})),
+	reset: () => {
+		set(store.getInitialState())
+	},
 	openedCards: [], // Do I need this?
 	matchedCards: [],
 	isGameOver: false,
