@@ -1,27 +1,27 @@
 import "./App.css";
 import { Card, CardTitle } from "./components/ui/card";
-import { useState, useEffect, useRef } from "react";
+import { useMemoryGameStore } from "./lib/store";
 
-function MemoryCard() {
-  const [isOpen, setIsOpen] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+type MemoryCardProps = {
+  value: string;
+  isOpen?: boolean;
+  isMatched?: boolean;
+  onClick?: () => void;
+};
 
+function MemoryCard({
+  value,
+  isOpen,
+  isMatched,
+  onClick,
+  highlighted,
+  greenBorder,
+}: MemoryCardProps & { highlighted?: boolean; greenBorder?: boolean }) {
   const handleClick = () => {
-    if (!isOpen) {
-      setIsOpen(true);
-      timerRef.current = setTimeout(() => {
-        setIsOpen(false);
-      }, 3000);
+    if (!isOpen && !isMatched) {
+      onClick?.();
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div
@@ -51,9 +51,19 @@ function MemoryCard() {
           className="flip-card-back absolute w-full h-full"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
-          <Card className="aspect-square flex items-center justify-center bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-200 border border-gray-200 w-full h-full">
-            <CardTitle className="text-3xl font-bold text-gray-700 select-none">
-              😊
+          <Card
+            className={`aspect-square flex items-center justify-center bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-200 border w-full h-full${
+              isOpen && isMatched
+                ? " border-1 border-green-500"
+                : highlighted && !isMatched
+                ? " border-2 border-red-500"
+                : greenBorder && !isMatched
+                ? " border-2 border-green-500"
+                : " border border-gray-200"
+            }`}
+          >
+            <CardTitle className="text-6xl font-bold text-gray-700 select-none">
+              {value}
             </CardTitle>
           </Card>
         </div>
@@ -63,12 +73,29 @@ function MemoryCard() {
 }
 
 function App() {
+  const cards = useMemoryGameStore((state) => state.cards);
+  const highlightedCardId = useMemoryGameStore(
+    (state) => state.highlightedCardId
+  );
+  const handleCardClick = useMemoryGameStore((state) => state.handleCardClick);
   return (
     <div className="flex items-center justify-center bg-gray-100">
       <div className="grid grid-cols-6 gap-2 w-[800px] p-1">
-        {Array.from({ length: 36 }, (_, index) => (
-          <MemoryCard key={index} />
-        ))}
+        {cards.map(({ id, value, isOpen, isMatched }) => {
+          // Green border for any open card that is not matched and not highlighted (red)
+          const greenBorder = isOpen && !isMatched && highlightedCardId !== id;
+          return (
+            <MemoryCard
+              key={id}
+              value={value}
+              isOpen={isOpen}
+              isMatched={isMatched}
+              highlighted={highlightedCardId === id && !isMatched}
+              greenBorder={greenBorder}
+              onClick={() => handleCardClick(id)}
+            />
+          );
+        })}
       </div>
     </div>
   );
