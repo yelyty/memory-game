@@ -8,7 +8,7 @@ type Card = {
 	isMatched: boolean;
 };
 
-type MemoryGameState = {
+export type MemoryGameState = {
 	cards: Card[];
 	openedCards: Card[];
 	matchedCards: Card[];
@@ -43,6 +43,7 @@ export const useMemoryGameStore = create<MemoryGameState & MemoryGameActions>((s
 			matchedCards: [],
 			isGameOver: false,
 			highlightedCardId: null,
+			tries: 0,
 		});
 	},
 	openedCards: [],
