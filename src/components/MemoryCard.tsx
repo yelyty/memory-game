@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { Card, CardTitle } from "./components/ui/card";
+import { Card, CardTitle } from "../components/ui/card";
 
 export type MemoryCardStatus = "default" | "error" | "success";
 
@@ -29,6 +29,7 @@ export default function MemoryCard({
     <div
       className="flip-card aspect-square w-full h-full cursor-pointer"
       onClick={handleClick}
+      style={{ willChange: "transform" }}
     >
       <div className={clsx("flip-card-inner", { "rotate-y-180": isOpen })}>
         {/* Front Face */}

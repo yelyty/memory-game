@@ -1,66 +1,77 @@
-import "./App.css";
-import { Button } from "./components/ui/button";
-import { useMemoryGameStore } from "./lib/store";
-import MemoryCard from "./MemoryCard";
+import { useEffect, useState, useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useMemoryGameStore } from "./lib/store";
+import Header from "./components/Header";
+import Board from "./components/Board";
+import GameOver from "./components/GameOver";
+import StartGame from "./components/StartGame";
+import useGameTimer from "./hooks/useGameTimer";
+import "./App.css";
 
 function App() {
-  const [cards, openedCards] = useMemoryGameStore(
-    useShallow((state) => [state.cards, state.openedCards])
+  const [gameStarted, setGameStarted] = useState(false);
+
+  const [cards, openedCards, tries, isGameOver] = useMemoryGameStore(
+    useShallow((state) => [
+      state.cards,
+      state.openedCards,
+      state.tries,
+      state.isGameOver,
+    ])
   );
+
   const handleCardClick = useMemoryGameStore((state) => state.handleCardClick);
   const resetGame = useMemoryGameStore((state) => state.reset);
-  const tries = useMemoryGameStore((state) => state.tries);
+
+  const { seconds, resetTimer, startTimer, stopTimer } = useGameTimer();
+
+  useEffect(() => {
+    if (gameStarted && !isGameOver) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+  }, [gameStarted, isGameOver, startTimer, stopTimer]);
+
+  useEffect(() => {
+    if (tries === 0) resetTimer();
+  }, [tries, resetTimer]);
+
+  const handleStart = useCallback(() => {
+    resetGame();
+    setGameStarted(true);
+    startTimer();
+  }, [resetGame, setGameStarted, startTimer]);
+
+  const handleRestart = useCallback(() => {
+    setGameStarted(true);
+    resetGame();
+    resetTimer();
+    setTimeout(() => {
+      startTimer();
+    }, 0);
+  }, [setGameStarted, resetGame, resetTimer, startTimer]);
+
+  if (!gameStarted) {
+    return <StartGame onStart={handleStart} />;
+  }
+
+  if (isGameOver) {
+    return <GameOver tries={tries} time={seconds} onRestart={handleRestart} />;
+  }
 
   return (
-    <div className="flex items-center justify-center bg-gray-100 flex-col">
-      <div className="flex align-center justify-between w-full max-w-3xl p-4">
-        <div className="text-lg font-semibold">
-          Tries: <span className="text-blue-600">{tries}</span>
-        </div>
-        <Button
-          className="px-4 py-2 cursor-pointer bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
-          onClick={resetGame}
-        >
-          Reset Game
-        </Button>
-      </div>
-      <div className="grid grid-cols-6 gap-2 w-[800px] p-1">
-        {cards.map((card) => {
-          const { id, value, isOpen, isMatched } = card;
-          const isCurrentlyOpened = openedCards.some(
-            (openedCard) => openedCard.id === id
-          );
-          let status: "default" | "error" | "success" = "default";
-          if (isMatched) {
-            status = "success";
-          } else if (isCurrentlyOpened) {
-            if (openedCards.length === 1) {
-              status = "success";
-            } else if (openedCards.length === 2) {
-              const [firstCard, secondCard] = openedCards;
-              if (firstCard.value === secondCard.value) {
-                status = "success";
-              } else {
-                if (id === firstCard.id) {
-                  status = "success";
-                } else if (id === secondCard.id) {
-                  status = "error";
-                }
-              }
-            }
-          }
-          return (
-            <MemoryCard
-              key={id}
-              value={value}
-              isOpen={isOpen}
-              status={status}
-              onClick={() => handleCardClick(id)}
-            />
-          );
-        })}
-      </div>
+    <div
+      className={
+        "flex items-center justify-center bg-gray-100 flex-col relative min-h-screen"
+      }
+    >
+      <Header tries={tries} time={seconds} onReset={handleRestart} />
+      <Board
+        cards={cards}
+        openedCards={openedCards}
+        handleCardClick={handleCardClick}
+      />
     </div>
   );
 }
